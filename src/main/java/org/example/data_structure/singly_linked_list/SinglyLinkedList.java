@@ -14,6 +14,12 @@ public class SinglyLinkedList<T> {
         this.head = null;
     }
 
+    public SinglyLinkedList(T[] arr) {
+        for (T t : arr) {
+            this.add(t);
+        }
+    }
+
     public SinglyLinkedList(T value) {
         head = new Node<T>(value);
         this.size = 1;
@@ -109,7 +115,7 @@ public class SinglyLinkedList<T> {
         Node<T> p = this.head;
 
         while (p != null) {
-            System.out.println(p.getVal());
+            System.out.print(p.getVal() + "\t");
             p = p.getNext();
         }
     }

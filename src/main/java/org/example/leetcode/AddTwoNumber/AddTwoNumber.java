@@ -9,15 +9,40 @@ public class AddTwoNumber {
             return null;
         }
 
-        SinglyLinkedList<Integer> linkedList = new SinglyLinkedList<Integer>(null);
+        SinglyLinkedList<Integer> linkedList = new SinglyLinkedList<Integer>();
 
-        Node<Integer> head1 = l1.getHead();
-        Node<Integer> head2 = l2.getHead();
+        Node<Integer> p1 = l1.getHead();
+        Node<Integer> p2 = l2.getHead();
 
-        while (head1 != null && head2 != null) {
+        int remain = 0;
 
+        while (p1 != null && p2 != null) {
+            int temp = p1.getVal() + p2.getVal() + remain;
+            remain = temp / 10;
+            linkedList.add(temp % 10);
+
+            p1 = p1.getNext();
+            p2 = p2.getNext();
         }
 
-        return null;
+        while (p1 != null) {
+            int temp = p1.getVal() + remain;
+            remain = temp / 10;
+            linkedList.add(temp % 10);
+            p1 = p1.getNext();
+        }
+
+        while (p2 != null) {
+            int temp = p2.getVal() + remain;
+            remain = temp / 10;
+            linkedList.add(temp % 10);
+            p2 = p2.getNext();
+        }
+
+        if (remain > 0) {
+            linkedList.add(remain);
+        }
+
+        return linkedList;
     }
 }
