@@ -7,12 +7,25 @@ import lombok.Setter;
 @Setter
 public class SinglyLinkedList<T> {
     private Node<T> head;
+    private int size;
+
+    public SinglyLinkedList() {
+        this.size = 0;
+        this.head = null;
+    }
 
     public SinglyLinkedList(T value) {
         head = new Node<T>(value);
+        this.size = 1;
     }
 
     public void add(T value) {
+        if (this.head == null) {
+            this.head = new Node<T>(value);
+            this.size++;
+            return;
+        }
+
         Node<T> p = this.head;
 
         while (p.getNext() != null) {
@@ -20,6 +33,76 @@ public class SinglyLinkedList<T> {
         }
 
         p.setNext(new Node<T>(value));
+        this.size++;
+    }
+
+    public Node<T> get(int index) {
+        if (index < 0) {
+            System.out.println("Error at get: Index < 0");
+            return null;
+        }
+
+        Node<T> p = this.head;
+        while (p != null && index > 0) {
+            p = p.getNext();
+            index--;
+        }
+
+        return p;
+    }
+
+    public void insert(int index, T value) {
+        if (index < 0 || value == null) {
+            System.out.println("Error at insert: Index < 0 or T is null");
+        }
+
+        if (index == 0) {
+            this.head = new Node<T>(value, this.head);
+            this.size++;
+            return;
+        }
+
+        Node<T> p = this.head;
+
+        while (p.getNext() != null && index > 1) {
+            p = p.getNext();
+            index--;
+        }
+
+        if (index > 1) {
+            System.out.println("Error at insert: Index is longer than the size of the list");
+            return;
+        }
+
+        if (p.getNext() == null) {
+            p.setNext(new Node<T>(value));
+        } else {
+            Node<T> next = new Node<T>(value, p.getNext());
+            p.setNext(next);
+        }
+        this.size++;
+    }
+
+    public void remove(int index) {
+        if (index < 0 || index >= this.size) {
+            System.out.println("Error at remove: Index is out of index");
+            return;
+        }
+
+        if (index == 0) {
+            this.head = this.head.getNext();
+            this.size--;
+            return;
+        }
+
+        Node<T> p = this.head;
+        while (p.getNext() != null && p.getNext().getNext() != null && index > 1) {
+            p = p.getNext();
+            index--;
+        }
+
+        p.setNext(p.getNext().getNext());
+        this.size--;
     }
 
     public void print() {
