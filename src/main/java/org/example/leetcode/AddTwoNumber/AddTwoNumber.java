@@ -1,10 +1,20 @@
+// Reference: https://leetcode.com/problems/add-two-numbers/
+
 package org.example.leetcode.AddTwoNumber;
 
 import org.example.data_structure.singly_linked_list.Node;
 import org.example.data_structure.singly_linked_list.SinglyLinkedList;
 
 public class AddTwoNumber {
-    public static SinglyLinkedList<Integer> solution(SinglyLinkedList<Integer> l1, SinglyLinkedList<Integer> l2) {
+    /**
+     * Add two numbers without recursion
+     * 
+     * @param l1
+     * @param l2
+     * @return
+     */
+    public static SinglyLinkedList<Integer> solutionWithoutRecursion(SinglyLinkedList<Integer> l1,
+            SinglyLinkedList<Integer> l2) {
         if (l1 == null && l2 == null) {
             return null;
         }

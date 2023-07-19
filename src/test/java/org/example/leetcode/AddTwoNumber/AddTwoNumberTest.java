@@ -14,7 +14,7 @@ public class AddTwoNumberTest {
         list2.add(6);
         list2.add(4);
 
-        AddTwoNumber.solution(list1, list2).print();
+        AddTwoNumber.solutionWithoutRecursion(list1, list2).print();
     }
 
     @Test
@@ -22,7 +22,7 @@ public class AddTwoNumberTest {
         SinglyLinkedList<Integer> list1 = new SinglyLinkedList<Integer>(9);
         SinglyLinkedList<Integer> list2 = new SinglyLinkedList<Integer>(0);
 
-        AddTwoNumber.solution(list1, list2).print();
+        AddTwoNumber.solutionWithoutRecursion(list1, list2).print();
     }
 
     @Test
@@ -32,6 +32,6 @@ public class AddTwoNumberTest {
         Integer[] arr2 = { 9, 9, 9, 9 };
         SinglyLinkedList<Integer> list2 = new SinglyLinkedList<>(arr2);
 
-        AddTwoNumber.solution(list1, list2).print();
+        AddTwoNumber.solutionWithoutRecursion(list1, list2).print();
     }
 }
