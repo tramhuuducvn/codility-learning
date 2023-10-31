@@ -1,3 +1,4 @@
+//Reference: https://app.codility.com/programmers/lessons/1-iterations/binary_gap/
 package org.example.codility.interations;
 
 public class BinaryGap {
@@ -15,7 +16,7 @@ public class BinaryGap {
         char[] binstr = convertToBinary(N).toCharArray();
         int size = binstr.length;
         int index = 0;
-
+        // ignore first zero cases
         while (index < size && binstr[index] == '0') {
             index++;
         }
