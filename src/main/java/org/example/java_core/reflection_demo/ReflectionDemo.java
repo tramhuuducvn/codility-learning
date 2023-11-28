@@ -5,7 +5,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
+import org.example.java_core.annotation.DocumentedAnnotation;
+
 public class ReflectionDemo {
+    @DocumentedAnnotation
     private String dummy;
 
     public ReflectionDemo() {
