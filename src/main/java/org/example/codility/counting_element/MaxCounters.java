@@ -19,11 +19,16 @@ public class MaxCounters {
     public static int[] solution(int N, int[] A) {
         int[] result = new int[N];
         int max = 0;
+        int lastUpdate = max;
 
         for (int a : A) {
 
             if (a == N + 1) {
+                if (lastUpdate == max) {
+                    continue;
+                }
                 setToValue(result, max);
+                lastUpdate = max;
                 continue;
             }
 

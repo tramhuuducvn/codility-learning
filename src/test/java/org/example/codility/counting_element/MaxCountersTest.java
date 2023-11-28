@@ -1,12 +1,20 @@
 package org.example.codility.counting_element;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
 public class MaxCountersTest {
     // example test
+    /*
+     * (0, 0, 1, 0, 0)
+     * (0, 0, 1, 1, 0)
+     * (0, 0, 1, 2, 0)
+     * (2, 2, 2, 2, 2)
+     * (3, 2, 2, 2, 2)
+     * (3, 2, 2, 3, 2)
+     * (3, 2, 2, 4, 2)
+     */
     @Test
     void example() {
         // Given info
@@ -20,6 +28,10 @@ public class MaxCountersTest {
     }
 
     // correctness tests
+    /*
+     * (0) - (0) - (1) - (2) - (2) - (3)
+     * 
+     */
     @Test
     void correctness_1() {
         // Given info
@@ -31,4 +43,27 @@ public class MaxCountersTest {
 
         assertArrayEquals(expected, actual);
     }
+
+    /**
+     * (0, 0, 0, 0)
+     * (1, 0, 0, 0)
+     * (1, 0, 1, 0)
+     * (1, 1, 1, 1)
+     * (1, 1, 1, 1)
+     * (1, 1, 1, 2)
+     * (2, 2, 2, 2)
+     * (2, 2, 2, 2)
+     */
+    @Test
+    void correctness_2() {
+        // Given info
+        int N = 4;
+        int[] A = { 1, 3, 5, 5, 4, 5, 5 };
+        // Check
+        int[] actual = MaxCounters.solution(N, A);
+        int[] expected = { 2, 2, 2, 2 };
+
+        assertArrayEquals(expected, actual);
+    }
+
 }
