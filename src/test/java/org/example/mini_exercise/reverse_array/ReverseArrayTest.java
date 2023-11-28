@@ -1,4 +1,4 @@
-package org.example.codility.reverse_array;
+package org.example.mini_exercise.reverse_array;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

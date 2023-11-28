@@ -1,4 +1,4 @@
-package org.example.codility.reverse_array;
+package org.example.mini_exercise.reverse_array;
 
 public class ReverseArray {
     public static int[] solution(int[] A) {
