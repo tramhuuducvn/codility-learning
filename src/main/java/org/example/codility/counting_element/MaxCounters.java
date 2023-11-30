@@ -41,4 +41,31 @@ public class MaxCounters {
 
         return result;
     }
+
+    public static int max(int a, int b) {
+        return a > b ? a : b;
+    }
+
+    public static int[] solution_2(int N, int[] A) {
+        int[] counters = new int[N];
+        int max = 0;
+        int b = 0;
+
+        for (int a : A) {
+            if (a <= N) {
+                counters[a - 1] = max(b, counters[a - 1]) + 1;
+                max = max(max, counters[a - 1]);
+            } else {
+                b = max;
+            }
+
+            for (int i = 0; i < counters.length; ++i) {
+                if (counters[i] < b) {
+                    counters[i] = b;
+                }
+            }
+        }
+
+        return counters;
+    }
 }

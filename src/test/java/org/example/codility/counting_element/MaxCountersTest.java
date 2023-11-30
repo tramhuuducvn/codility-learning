@@ -25,7 +25,7 @@ public class MaxCountersTest {
         int N = 5;
         int[] A = { 3, 4, 4, 6, 1, 4, 4 };
         // Check
-        int[] actual = MaxCounters.solution(N, A);
+        int[] actual = MaxCounters.solution_2(N, A);
         int[] expected = { 3, 2, 2, 4, 2 };
 
         assertArrayEquals(expected, actual);
