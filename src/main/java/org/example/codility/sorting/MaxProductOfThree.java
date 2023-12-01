@@ -68,7 +68,6 @@ public class MaxProductOfThree {
                 }
             }
             swap(A, maxIndex, size - count);
-
             count++;
         }
 
