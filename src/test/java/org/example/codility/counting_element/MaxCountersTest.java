@@ -34,7 +34,6 @@ public class MaxCountersTest {
     // correctness tests
     /*
      * (0) - (0) - (1) - (2) - (2) - (3)
-     * 
      */
     @Test
     void correctness_1() {
@@ -99,5 +98,4 @@ public class MaxCountersTest {
     void palindromes(String candidate) {
         assertTrue(StringUtils.isNotBlank(candidate));
     }
-
 }
