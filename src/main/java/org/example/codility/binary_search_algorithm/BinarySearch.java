@@ -1,4 +1,4 @@
-package org.example.codility.BinaryAearchAlgorithm;
+package org.example.codility.binary_search_algorithm;
 
 public class BinarySearch {
     public static int solution(int[] A, int value) {

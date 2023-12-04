@@ -1,4 +1,4 @@
-package org.example.codility.BinaryAearchAlgorithm;
+package org.example.codility.binary_search_algorithm;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
