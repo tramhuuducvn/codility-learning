@@ -36,5 +36,11 @@
             <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- Micrometers -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-atlas</artifactId>
+            <version>1.11.0</version>
+        </dependency>
     </dependencies>
 </project>

@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SinglyLinkedList<T> {
-    private Node<T> head;
+    private ListNode<T> head;
     private int size;
 
     public SinglyLinkedList() {
@@ -21,34 +21,34 @@ public class SinglyLinkedList<T> {
     }
 
     public SinglyLinkedList(T value) {
-        head = new Node<T>(value);
+        head = new ListNode<T>(value);
         this.size = 1;
     }
 
     public void add(T value) {
         if (this.head == null) {
-            this.head = new Node<T>(value);
+            this.head = new ListNode<T>(value);
             this.size++;
             return;
         }
 
-        Node<T> p = this.head;
+        ListNode<T> p = this.head;
 
         while (p.getNext() != null) {
             p = p.getNext();
         }
 
-        p.setNext(new Node<T>(value));
+        p.setNext(new ListNode<T>(value));
         this.size++;
     }
 
-    public Node<T> get(int index) {
+    public ListNode<T> get(int index) {
         if (index < 0) {
             System.out.println("Error at get: Index < 0");
             return null;
         }
 
-        Node<T> p = this.head;
+        ListNode<T> p = this.head;
         while (p != null && index > 0) {
             p = p.getNext();
             index--;
@@ -63,12 +63,12 @@ public class SinglyLinkedList<T> {
         }
 
         if (index == 0) {
-            this.head = new Node<T>(value, this.head);
+            this.head = new ListNode<T>(value, this.head);
             this.size++;
             return;
         }
 
-        Node<T> p = this.head;
+        ListNode<T> p = this.head;
 
         while (p.getNext() != null && index > 1) {
             p = p.getNext();
@@ -81,9 +81,9 @@ public class SinglyLinkedList<T> {
         }
 
         if (p.getNext() == null) {
-            p.setNext(new Node<T>(value));
+            p.setNext(new ListNode<T>(value));
         } else {
-            Node<T> next = new Node<T>(value, p.getNext());
+            ListNode<T> next = new ListNode<T>(value, p.getNext());
             p.setNext(next);
         }
         this.size++;
@@ -101,7 +101,7 @@ public class SinglyLinkedList<T> {
             return;
         }
 
-        Node<T> p = this.head;
+        ListNode<T> p = this.head;
         while (p.getNext() != null && p.getNext().getNext() != null && index > 1) {
             p = p.getNext();
             index--;
@@ -112,7 +112,7 @@ public class SinglyLinkedList<T> {
     }
 
     public void print() {
-        Node<T> p = this.head;
+        ListNode<T> p = this.head;
 
         while (p != null) {
             System.out.print(p.getVal() + "\t");
@@ -147,8 +147,8 @@ public class SinglyLinkedList<T> {
                 return false;
             }
         } else {
-            Node a = head;
-            Node b = other.getHead();
+            ListNode a = head;
+            ListNode b = other.getHead();
 
             while (a != null && b != null && a.equals(b)) {
                 a = a.getNext();

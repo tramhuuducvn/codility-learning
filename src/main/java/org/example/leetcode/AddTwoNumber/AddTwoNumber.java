@@ -2,7 +2,7 @@
 
 package org.example.leetcode.AddTwoNumber;
 
-import org.example.data_structure.singly_linked_list.Node;
+import org.example.data_structure.singly_linked_list.ListNode;
 import org.example.data_structure.singly_linked_list.SinglyLinkedList;
 
 public class AddTwoNumber {
@@ -21,8 +21,8 @@ public class AddTwoNumber {
 
         SinglyLinkedList<Integer> linkedList = new SinglyLinkedList<Integer>();
 
-        Node<Integer> p1 = l1.getHead();
-        Node<Integer> p2 = l2.getHead();
+        ListNode<Integer> p1 = l1.getHead();
+        ListNode<Integer> p2 = l2.getHead();
 
         int remain = 0;
 

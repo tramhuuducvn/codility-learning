@@ -8,21 +8,21 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class Node<T> {
+public class ListNode<T> {
     private T val;
-    private Node<T> next;
+    private ListNode<T> next;
 
-    public Node() {
+    public ListNode() {
         this.val = null;
         this.next = null;
     }
 
-    public Node(T val) {
+    public ListNode(T val) {
         this.val = val;
         this.next = null;
     }
 
-    public Node(T val, Node<T> next) {
+    public ListNode(T val, ListNode<T> next) {
         this.val = val;
         this.next = next;
     }
