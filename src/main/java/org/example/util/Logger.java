@@ -14,7 +14,17 @@ public class Logger {
 
     public static String getLog(Object message) {
         String str = String.valueOf(message);
-        return ANSI_GREEN + "@D_LOG: " + str + ANSI_RESET;
+        return "\n" + ANSI_GREEN + "@D_LOG: " + str + ANSI_RESET;
+    }
+
+    public static String getDebug(Object message) {
+        String str = String.valueOf(message);
+        return "\n" + ANSI_BLUE + "@D_LOG: " + str + ANSI_RESET;
+    }
+
+    public static String getPrint(Object message) {
+        String str = String.valueOf(message);
+        return ANSI_BLUE + str + "   " + ANSI_RESET;
     }
 
     public static String getWarn(String message) {
@@ -27,6 +37,14 @@ public class Logger {
 
     public static void log(Object message) {
         System.out.println(getLog(message));
+    }
+
+    public static void debug(Object message) {
+        System.out.println(getDebug(message));
+    }
+
+    public static void print(Object message) {
+        System.out.print(getPrint(message));
     }
 
     public static void warn(String message) {

@@ -1,41 +1,81 @@
 package org.example.data_structure.tree;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Optional;
+
 import org.example.util.Logger;
 
 public class BinaryTree {
-    private BNode root;
 
-    public BinaryTree(int value) {
-        root = new BNode(value);
-    }
-
-    public void inorderTraversal(BNode node) {
+    public static void inorderTraversal(BNode node) {
         if (node == null) {
             return;
         }
         inorderTraversal(node.getLeft());
-        Logger.log(node.getValue());
+        Logger.print(node.getValue());
         inorderTraversal(node.getRight());
     }
 
-    public void preorderTraversal(BNode node) {
+    public static void preorderTraversal(BNode node) {
         if (node == null) {
             return;
         }
 
-        Logger.log(node.getValue());
-        preorderTraversal(node);
-        preorderTraversal(node);
+        Logger.print(node.getValue());
+        preorderTraversal(node.getLeft());
+        preorderTraversal(node.getRight());
     }
 
-    public void postorderTraversal(BNode node) {
+    public static void postorderTraversal(BNode node) {
         if (node == null) {
             return;
         }
 
-        postorderTraversal(node);
-        postorderTraversal(node);
-        Logger.log(node.getValue());
+        postorderTraversal(node.getLeft());
+        postorderTraversal(node.getRight());
+        Logger.print(node.getValue());
+    }
+
+    public static void levelOrderTraversal(BNode node) {
+        Deque<BNode> queue = new ArrayDeque<>();
+        queue.add(node);
+
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            // Print all elements of level N th for each loop
+            for (int i = 0; i < size; ++i) {
+                BNode temp = queue.pop();
+                // Print value
+                Logger.print(temp.getValue());
+                // Add to queue
+                Optional.ofNullable(temp.getLeft()).ifPresent(t -> queue.add(t));
+                Optional.ofNullable(temp.getRight()).ifPresent(t -> queue.add(t));
+            }
+            System.out.println();
+        }
+    }
+
+    public static int height(BNode node) {
+        if (node == null) {
+            return 0;
+        }
+
+        return 1 + Math.max(height(node.getLeft()), height(node.getRight()));
+    }
+
+    public static int countNode(BNode node) {
+        if (node == null) {
+            return 0;
+        }
+
+        return 1 + countNode(node.getLeft()) + countNode(node.getRight());
+    }
+
+    // public static
+
+    public static void main(String[] args) {
+
     }
 
 }
