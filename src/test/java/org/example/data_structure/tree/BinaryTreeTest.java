@@ -15,7 +15,7 @@ public class BinaryTreeTest {
         root.getLeft().addLeft(4);
         root.getLeft().addRight(5);
         root.getLeft().getRight().addLeft(9);
-        // root.getLeft().getRight().getLeft().addRight(10);
+        root.getLeft().getRight().getLeft().addRight(10);
 
         root.addRight(3);
         root.getRight().addLeft(6);
@@ -57,5 +57,11 @@ public class BinaryTreeTest {
     void testCountNode() {
         Logger.log("Total nodes: ");
         Logger.print(BinaryTree.countNode(root));
+    }
+
+    @Test
+    void testFindNode() {
+        Logger.log("Find node 7: ");
+        Logger.print(BinaryTree.findNode(root, 7).getValue());
     }
 }

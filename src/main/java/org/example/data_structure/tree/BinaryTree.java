@@ -72,6 +72,27 @@ public class BinaryTree {
         return 1 + countNode(node.getLeft()) + countNode(node.getRight());
     }
 
+    public static BNode findNode(BNode node, int value) {
+        Deque<BNode> queue = new ArrayDeque<>();
+        queue.add(node);
+
+        while (!queue.isEmpty()) {
+            BNode temp = queue.pop();
+            if (temp.getValue() == value) {
+                return temp;
+            }
+
+            if (temp.getLeft() != null) {
+                queue.add(temp.getLeft());
+            }
+            if (temp.getRight() != null) {
+                queue.add(temp.getRight());
+            }
+        }
+
+        return null;
+    }
+
     // public static
 
     public static void main(String[] args) {
