@@ -1,6 +1,5 @@
 package org.example;
 
-import java.util.Map;
 import java.util.function.Function;
 
 import org.example.util.Logger;
@@ -30,16 +29,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        // String result = test("Hello", Main::log);
-        // String ret = test("Hello", String::toUpperCase);
-        // System.out.println(result);
-
-        Map<String, String> envVariables = System.getenv();
-
-        for (Map.Entry<String, String> entry : envVariables.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            Logger.log(key + " = " + value);
-        }
+    
     }
 }
