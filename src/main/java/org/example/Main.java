@@ -1,5 +1,6 @@
 package org.example;
 
+import java.nio.charset.Charset;
 import java.util.function.Function;
 
 public class Main {
@@ -13,8 +14,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        String result = test("Hello", Main::log);
-        String ret = test("Hello", String::toUpperCase);
-        System.out.println(result);
+
     }
 }
