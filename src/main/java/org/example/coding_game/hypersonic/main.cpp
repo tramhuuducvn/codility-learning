@@ -46,11 +46,13 @@ namespace primitive
         id2 = 2,
         id3 = 3,
     };
+
     struct config_t
     {
         int height, width;
         player_id_t self_id;
     };
+
     istream &operator>>(istream &in, config_t &a)
     {
         int self_id;
@@ -70,6 +72,7 @@ namespace primitive
         bomb = 1,
         item = 2,
     };
+
     struct player_t
     {
         entity_type_t type;
@@ -77,6 +80,7 @@ namespace primitive
         int x, y;
         int bomb, range;
     };
+
     struct bomb_t
     {
         entity_type_t type;
@@ -84,6 +88,7 @@ namespace primitive
         int x, y;
         int time, range;
     };
+
     struct item_t
     {
         entity_type_t type;
@@ -92,6 +97,7 @@ namespace primitive
         item_kind_t kind;
         int dummy2;
     };
+
     union entity_t
     {
         struct
@@ -104,6 +110,7 @@ namespace primitive
         bomb_t bomb;
         item_t item;
     };
+
     istream &operator>>(istream &in, entity_t &a)
     {
         return in >> (int &)(a.type) >> (int &)(a.owner) >> a.x >> a.y >> a.param1 >> a.param2;
@@ -142,6 +149,7 @@ namespace primitive
         b.range = a.range;
         return b;
     }
+
     item_t drop_item(int y, int x, item_kind_t kind)
     {
         item_t a = {};
@@ -164,12 +172,14 @@ namespace primitive
     {
         return a != cell_t::wall and a != cell_t::empty;
     }
+
     struct turn_t
     {
         config_t config;
         vector<vector<cell_t>> field;
         vector<entity_t> entities;
     };
+
     istream &operator>>(istream &in, turn_t &a)
     {
         a.field = vectors(cell_t::empty, a.config.height, a.config.width);
