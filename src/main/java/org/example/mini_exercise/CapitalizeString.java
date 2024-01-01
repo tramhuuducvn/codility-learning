@@ -1,7 +1,5 @@
 package org.example.mini_exercise;
 
-import java.util.Arrays;
-
 /*
  * hello world -> Hello World
  * hellO   worlD -> Hello   World
@@ -31,5 +29,12 @@ public class CapitalizeString {
             result += (char) b;
         }
         return result;
+    }
+
+    public static int fac(int N) {
+        if (N == 0) {
+            return 1;
+        }
+        return N * fac(N - 1);
     }
 }

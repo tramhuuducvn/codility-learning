@@ -2,8 +2,6 @@ package org.example;
 
 import java.util.function.Function;
 
-import org.example.util.Logger;
-
 public class Main {
     public static String test(String input, Function<String, String> transformer) {
         return transformer.apply(input);
@@ -29,6 +27,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-    
+
     }
 }
