@@ -8,11 +8,17 @@ import java.io.*;
 import java.math.*;
 
 enum CellType {
-    WALL, EMPTY, BOX, BOX_EXTRA_RANGE, BOX_EXTRA_BOMB
+    WALL,
+    EMPTY,
+    BOX,
+    BOX_EXTRA_RANGE,
+    BOX_EXTRA_BOMB
 }
 
 enum EntityType {
-    PLAYER, BOMB, ITEM
+    PLAYER,
+    BOMB,
+    ITEM
 }
 
 class GameConfig {
@@ -26,15 +32,11 @@ class Entity {
     int x;
     int y;
 
-    // public Entity() {
-    // }
-
     public Entity(EntityType entityType, int x, int y) {
         this.entityType = entityType;
         this.x = x;
         this.y = y;
     }
-
 }
 
 class Player extends Entity {
@@ -78,13 +80,17 @@ class Item extends Entity {
 }
 
 class Turn {
-    private List<List<CellType>> board;
-    private List<Entity> entities;
+    List<List<CellType>> board;
+    List<Entity> entities;
 }
 
 class AI {
     private GameConfig config;
     private List<Turn> turns;
+
+    public AI(GameConfig config) {
+        this.config = config;
+    }
 }
 
 /**
@@ -94,6 +100,8 @@ class AI {
 class HyperSonicGame {
     // for scan input
     private Scanner scanner;
+    // game configuration
+    private GameConfig gameConfig;
 
     // Entrance Point
     public static void main(String args[]) {
@@ -104,13 +112,16 @@ class HyperSonicGame {
 
     public HyperSonicGame() {
         scanner = new Scanner(System.in);
+        this.gameConfig = scanGameConfig();
     }
 
-    /*
+    /**
      * Scan the map's dimensions including with and height
      * Scan current playerId
+     * 
+     * @return Game config
      */
-    private GameConfig loadGameConfig() {
+    private GameConfig scanGameConfig() {
         GameConfig gameConfig = new GameConfig();
         gameConfig.width = scanner.nextInt();
         gameConfig.height = scanner.nextInt();
@@ -119,33 +130,48 @@ class HyperSonicGame {
         return gameConfig;
     }
 
-    private void play() {
-        GameConfig gameConfig = loadGameConfig();
+    private Turn scanTurn() {
+        Turn turn = new Turn();
+        turn.board = new ArrayList<>(); // Board game = {width*height} cells
 
-        while (true) {
-            break;
+        // Load board game
+        for (int i = 0; i < this.gameConfig.height; i++) {
+            String row = scanner.next();
+            char[] cells = row.toCharArray();
+
+            List<CellType> boardRow = new ArrayList<>(); // {width} cells on each row
+            for (char c : cells) {
+                boardRow.add(CellType.valueOf(String.valueOf(c)));
+            }
+            turn.board.add(boardRow);
         }
 
-        // // game loop
-        // while (true) {
-        // for (int i = 0; i < height; i++) {
-        // String row = in.next();
-        // }
-        // int entities = in.nextInt();
-        // for (int i = 0; i < entities; i++) {
-        // int entityType = in.nextInt();
-        // int owner = in.nextInt();
-        // int x = in.nextInt();
-        // int y = in.nextInt();
-        // int param1 = in.nextInt();
-        // int param2 = in.nextInt();
-        // }
+        int entities = scanner.nextInt();
 
-        // // Write an action using System.out.println()
-        // // To debug: System.err.println("Debug messages...");
+        for (int i = 0; i < entities; i++) {
+            int entityType = scanner.nextInt();
+            int owner = scanner.nextInt();
+            int x = scanner.nextInt();
+            int y = scanner.nextInt();
+            int param1 = scanner.nextInt();
+            int param2 = scanner.nextInt();
+        }
 
-        // System.out.println("BOMB 6 5");
-        // }
+        return turn;
+    }
+
+    private void play() {
+        if (this.gameConfig == null) {
+            System.out.println("GAME CONFIG IS NULL");
+            return;
+        }
+
+        AI ai = new AI(this.gameConfig);
+
+        while (true) {
+            Turn turn = scanTurn();
+            break;
+        }
         System.out.println(gameConfig);
     }
 }

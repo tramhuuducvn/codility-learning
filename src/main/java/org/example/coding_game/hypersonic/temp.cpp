@@ -1015,15 +1015,16 @@ int main()
     config_t config;
     cin >> config;
     AI ai(config);
+
     while (true)
     {
         turn_t turn = {config};
         cin >> turn;
-        // high_resolution_clock::time_point begin = high_resolution_clock::now();
+        high_resolution_clock::time_point begin = high_resolution_clock::now();
         output_t output = ai.think(turn);
         cout << output << endl;
-        // high_resolution_clock::time_point end = high_resolution_clock::now();
-        // ll count = duration_cast<microseconds>(end - begin).count();
-        // cerr << "elapsed time: " << count / 1000 << "." << count % 1000 << "msec" << endl;
+        high_resolution_clock::time_point end = high_resolution_clock::now();
+        ll count = duration_cast<microseconds>(end - begin).count();
+        cerr << "elapsed time: " << count / 1000 << "." << count % 1000 << "msec" << endl;
     }
 }

@@ -66,6 +66,7 @@ namespace primitive
         extra_range = 1,
         extra_bomb = 2,
     };
+
     enum class entity_type_t
     {
         player = 0,
