@@ -250,7 +250,8 @@ class Pilot {
 
     private void explode(
             Map<Point, Entity> obstructions,
-            List<List<CellType>> field, List<List<ExplodedTimeInfo>> result,
+            List<List<CellType>> field,
+            List<List<ExplodedTimeInfo>> result,
             Bomb bomb,
             int time,
             Set<Point> used) {
@@ -259,7 +260,7 @@ class Pilot {
         }
 
         used.add(bomb.point);
-        updateExplodeTime(result, bomb.point.y, bomb.point.x, time, bomb.ownerId);
+        updateExplodeTime(result, bomb.point.x, bomb.point.y, time, bomb.ownerId);
 
         for (int i = 0; i < BOMBER_NUMBER; ++i) {
             for (int j = 1; j < bomb.range; ++j) {
