@@ -37,7 +37,6 @@ bool operator<(point_t a, point_t b) { return make_pair(a.y, a.x) < make_pair(b.
 
 namespace primitive
 {
-
     const int player_number = 4;
     enum class player_id_t : int
     {
@@ -307,6 +306,7 @@ multimap<point_t, entity_t> entity_multimap(vector<entity_t> const &entities)
     {
         ent_at.emplace(point(ent), ent);
     }
+
     return ent_at;
 }
 
@@ -328,11 +328,14 @@ vector<vector<exploded_time_info_t>> exploded_time(turn_t const &turn)
     int w = turn.config.width;
     map<point_t, entity_t> obstructions; // modified dynamically
     array<vector<point_t>, bomb_time> explode_at = {};
+    // store bomb or item to Map<Point, Entity> obstructions
     for (auto &ent : turn.entities)
     {
         if (ent.type == entity_type_t::bomb)
         {
             obstructions[point(ent)] = ent;
+            // store location of bomb to explodedAt (which bomb will explode after
+            // {index} seconds)
             explode_at[ent.bomb.time - 1].push_back(point(ent));
         }
         else if (ent.type == entity_type_t::item)
@@ -340,6 +343,7 @@ vector<vector<exploded_time_info_t>> exploded_time(turn_t const &turn)
             obstructions[point(ent)] = ent;
         }
     }
+
     vector<vector<cell_t>> field = turn.field; // modified
     vector<vector<exploded_time_info_t>> result = vectors(default_explosion_info(), h, w);
     auto update = [&](int y, int x, int time, player_id_t owner)
@@ -349,6 +353,7 @@ vector<vector<exploded_time_info_t>> exploded_time(turn_t const &turn)
         result[y][x].time = time;
         result[y][x].owner[int(owner)] = true;
     };
+    // explode
     function<void(bomb_t const &, int, set<point_t> &)> explode = [&](bomb_t const &ent, int time, set<point_t> &used)
     {
         if (used.count(point(ent)))
@@ -365,6 +370,7 @@ vector<vector<exploded_time_info_t>> exploded_time(turn_t const &turn)
                     continue;
                 if (field[ny][nx] == cell_t::wall)
                     break;
+
                 update(ny, nx, time, ent.owner);
                 bool obstructed = false;
                 if (obstructions.count(point(ny, nx)))
@@ -394,6 +400,7 @@ vector<vector<exploded_time_info_t>> exploded_time(turn_t const &turn)
             }
         }
     };
+
     repeat(t, bomb_time)
     {
         set<point_t> used;
@@ -880,6 +887,7 @@ public:
             vector<vector<exploded_time_info_t>> exptime = exploded_time(turn);
             vector<map<player_id_t, command_t>> commands_base(1);
             map<point_t, bomb_t> bombs = select_bomb(turn.entities);
+            // @HERE
             for (auto &it : players)
             {
                 player_t &ent = it.second;
