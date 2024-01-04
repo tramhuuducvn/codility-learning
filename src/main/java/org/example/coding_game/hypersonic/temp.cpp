@@ -890,6 +890,7 @@ public:
             // @HERE
             for (auto &it : players)
             {
+                // @NOTE
                 player_t &ent = it.second;
                 if (ent.id != self.id)
                 {

@@ -376,7 +376,10 @@ class Pilot {
             Map<Point, Bomb> bombs = selectBomb(turn);
 
             for (Bomber b : bombers.values()) {
-                // Bomber bomber =
+                // @HERE
+                if (b.id == this.config.myId) {
+
+                }
             }
         }
         return null;
