@@ -880,8 +880,8 @@ public:
         int height = config.height;
         int width = config.width;
         map<player_id_t, player_t> players = select_player(turn.entities);
-        player_t self = players[turn.config.self_id];
         multimap<point_t, entity_t> ent_at = entity_multimap(turn.entities);
+        player_t self = players[turn.config.self_id];
 
         // to survive
         set<command_t> forbidden;

@@ -83,18 +83,30 @@ class GameConfig {
     int myId;
 }
 
-class Entity {
+class Entity implements Comparable {
     EntityType entityType;
     Point point;
+    int owner;
+    int param1;
+    int param2;
 
     public Entity(EntityType entityType, int x, int y) {
         this.entityType = entityType;
         this.point = new Point(x, y);
+        owner = 0;
+        param1 = 0;
+        param2 = 0;
     }
 
     @Override
     public String toString() {
         return "Entity [entityType=" + entityType + ", x=" + point.x + ", y=" + point.y + "]";
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        Entity other = (Entity) o;
+        return (this.entityType.ordinal()) - (other.entityType.ordinal());
     }
 }
 
@@ -108,6 +120,9 @@ class Bomber extends Entity {
         this.id = id;
         this.bomb = bomb;
         this.range = range;
+        this.owner = id;
+        this.param1 = bomb;
+        this.param2 = range;
     }
 }
 
@@ -122,6 +137,9 @@ class Bomb extends Entity {
         this.ownerId = ownerId;
         this.time = time;
         this.range = range;
+        this.owner = ownerId;
+        this.param1 = time;
+        this.param2 = range;
     }
 }
 
@@ -135,6 +153,9 @@ class Item extends Entity {
     public Item(EntityType entityType, int x, int y, ItemType itemType) {
         super(entityType, x, y);
         this.itemType = itemType;
+        this.param1 = itemType.ordinal();
+        this.owner = 0;
+        this.param2 = 0;
     }
 }
 
@@ -215,10 +236,43 @@ class ExplodedTimeInfo {
 
 class Game {
     public static final int TIME_LIMIT = 100; // ms
+    public static final int TIME_LIMIT_MARGIN = 5; // ms
+
     public static final int BOMBER_NUMBER = 4;
     public static final int BOMB_TIME = 8;
     public static final int[] dy = { -1, 1, 0, 0, 0 };
     public static final int[] dx = { 0, 0, 1, -1, 0 };
+    // time_limit - time_limit_margin; // magic, randomness
+}
+
+class Photon {
+    Turn turn;
+    Command initCommand;
+    int age;
+    int box, range, bomb; // difference
+    List<List<ExplodedTimeInfo>> expTime;
+    int boxAcc;
+    double bonus;
+    double score;
+    BigInteger signature;
+
+    public Photon() {
+    }
+
+    public Photon(Turn turn, Command initCommand, int age, int box, int range, int bomb,
+            List<List<ExplodedTimeInfo>> expTime, int boxAcc, double bonus, double score, BigInteger signature) {
+        this.turn = turn;
+        this.initCommand = initCommand;
+        this.age = age;
+        this.box = box;
+        this.range = range;
+        this.bomb = bomb;
+        this.expTime = expTime;
+        this.boxAcc = boxAcc;
+        this.bonus = bonus;
+        this.score = score;
+        this.signature = signature;
+    }
 }
 
 class Pilot extends Game {
@@ -683,24 +737,119 @@ class Pilot extends Game {
     private Set<Command> forbiddenCommands(Turn turn, Map<Integer, Command> commandBase) {
         List<List<ExplodedTimeInfo>> expTime = explodedTime(turn);
         Bomber self = this.findBomber(turn.entities, this.config.myId);
-
+        Set<Command> forbidden = new HashSet<>();
         final ActionType[] actionTypes = { ActionType.BOMB, ActionType.MOVE };
 
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 2; ++j) {
                 Map<Integer, Command> commands = new HashMap<>(commandBase);
                 commands.put(self.id, createCommand(self, dx[i], dy[i], actionTypes[j]));
-                // if()
+                if (isSurvivableWithCommands(self.id, commands, turn, expTime)) {
+                    break;
+                } else {
+                    forbidden.add(commands.get(self.id));
+                }
             }
         }
 
-        return null;
+        return forbidden;
+    }
+
+    private int totalBomb(int id, List<Entity> entities) {
+        int placed = 0;
+        int reserved = 0;
+
+        for (Entity ent : entities) {
+            if (ent.entityType == EntityType.BOMBER) {
+                if (((Bomber) ent).id == id) {
+                    reserved += ((Bomber) ent).bomb;
+                }
+            } else if (ent.entityType == EntityType.BOMB) {
+                if (((Bomb) ent).ownerId == id) {
+                    placed += 1;
+                }
+            }
+        }
+        return placed + reserved;
+    }
+
+    private double evaluatePhoton(Photon pho) { // fucking magic here
+        int height = this.config.height;
+        int width = this.config.width;
+
+        Map<Integer, Bomber> bombers = this.selectBomber(pho.turn.entities);
+        Bomber self = bombers.get(this.config.myId);
+        double score = 0;
+        double box_base = 10;
+        double box_delta = 1;
+        score += box_base * pho.box;
+        score += box_delta * pho.boxAcc;
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if (this.isBox(pho.turn.board.get(y).get(x)) && pho.expTime.get(y).get(x).time != Integer.MAX_VALUE
+                        && pho.expTime.get(y).get(x).owner[self.id]) {
+                    score += box_base - box_delta * pho.expTime.get(y).get(x).time;
+                }
+            }
+        }
+        score += 0.8 * Math.min(5, pho.range) + 0.4 * pho.range;
+        score += 3.0 * Math.min(2, pho.bomb) + 1.1 * Math.min(4, pho.bomb) + 0.5 * pho.bomb;
+        score -= 0.2 * (pho.bomb - self.bomb);
+        score -= 0.05 * Math.abs(self.point.y - height / 2.);
+        score -= 0.05 * Math.abs(self.point.x - width / 2.);
+        // score -= 2 * players.size(); // TODO: 実際には相手は回避するので、回避不能性を見なければ
+        score += pho.bonus;
+        return score;
+    }
+
+    private BigInteger signaturePhoton(Photon photon) {
+        int height = this.config.height;
+        int width = this.config.width;
+
+        BigInteger p = BigInteger.valueOf(1000000009);
+        BigInteger acc = BigInteger.valueOf(0);
+
+        acc.multiply(p).add(BigInteger.valueOf(photon.age));
+        acc.multiply(p).add(BigInteger.valueOf(photon.box));
+        acc.multiply(p).add(BigInteger.valueOf(photon.range));
+        acc.multiply(p).add(BigInteger.valueOf(photon.bomb));
+        acc.multiply(p).add(BigInteger.valueOf(photon.boxAcc));
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int min = Math.min(Game.BOMB_TIME + 1, photon.expTime.get(y).get(x).time);
+                acc.multiply(p).add(BigInteger.valueOf(min));
+            }
+        }
+
+        for (Entity entity : photon.turn.entities) {
+            acc.multiply(p).add(BigInteger.valueOf(entity.entityType.ordinal()));
+            acc.multiply(p).add(BigInteger.valueOf(entity.owner));
+            acc.multiply(p).add(BigInteger.valueOf(entity.point.x));
+            acc.multiply(p).add(BigInteger.valueOf(entity.point.y));
+            acc.multiply(p).add(BigInteger.valueOf(entity.param1));
+            acc.multiply(p).add(BigInteger.valueOf(entity.param2));
+        }
+        return acc;
+    }
+
+    private Photon initPhoton(Turn turn) {
+        Photon photon = new Photon();
+        photon.turn = new Turn(turn);
+        Collections.sort(photon.turn.entities);
+        photon.range = findBomber(turn.entities, this.config.myId).range;
+        photon.bomb = totalBomb(this.config.myId, turn.entities);
+        photon.expTime = explodedTime(turn);
+        photon.score = evaluatePhoton(photon);
+        photon.signature = signaturePhoton(photon);
+        return photon;
     }
 
     Output solve(Turn turn) {
         long clock_begin = System.currentTimeMillis();
         Map<Integer, Bomber> bombers = this.selectBomber(turn.entities);
         Map<Point, List<Entity>> entity_at = entityMultimap(turn.entities);
+        Bomber self = bombers.get(this.config.myId);
 
         // to survive
         Set<Command> forbidden;
@@ -721,6 +870,34 @@ class Pilot extends Game {
                 }
             }
             forbidden = forbiddenCommands(turn, commandBase);
+            if (forbidden.size() == 10) {
+                commandBase.clear();
+                forbidden = forbiddenCommands(turn, commandBase);
+            }
+            // TODO: Ignore it because it has no choice. I should have noticed this one time
+            // ago.
+            if (forbidden.size() == 10) {
+                forbidden.clear();
+            }
+
+            // Beam Search
+            String message = "";
+            Command command = new Command(ActionType.MOVE, self.point);
+            {
+                List<Photon> beam = new ArrayList<>();
+                beam.add(initPhoton(turn));
+                int beam_width = 100;
+                int point_beam_width = 6;
+                int simulation_time = 8;
+                int time_limit_margin = 5;
+                long clock_end = System.currentTimeMillis();
+                long clock_count = clock_end - clock_begin;
+
+                for (int age = 0; age < simulation_time; ++age) {
+                    Set<BigInteger> used;
+
+                }
+            }
         }
         return null;
     }
