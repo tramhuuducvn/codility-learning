@@ -719,6 +719,7 @@ bool is_survivable_with_commands(player_id_t self_id, vector<map<player_id_t, co
 set<command_t> forbidden_commands(turn_t const &turn, vector<map<player_id_t, command_t>> const &commands_base)
 {
     vector<vector<exploded_time_info_t>> exptime = exploded_time(turn);
+    // @HERE
     player_t self = *find_player(turn.entities, turn.config.self_id);
     set<command_t> forbidden;
     const action_t actions[2] = {action_t::bomb, action_t::move}; // the first is bomb
@@ -887,10 +888,8 @@ public:
             vector<vector<exploded_time_info_t>> exptime = exploded_time(turn);
             vector<map<player_id_t, command_t>> commands_base(1);
             map<point_t, bomb_t> bombs = select_bomb(turn.entities);
-            // @HERE
             for (auto &it : players)
             {
-                // @NOTE
                 player_t &ent = it.second;
                 if (ent.id != self.id)
                 {

@@ -157,6 +157,14 @@ class Command { // MOVE x y || BOMB x y
     ActionType action;
     Point point;
 
+    public Command() {
+    }
+
+    public Command(ActionType action, Point point) {
+        this.action = action;
+        this.point = point;
+    }
+
     @Override
     public String toString() {
         return action + " " + point.x + " " + point.y + " ";
@@ -363,6 +371,20 @@ class Pilot {
         return bombs;
     }
 
+    private int findBomber(List<Entity> entities, int id) {
+        List<Bomber> bombers = this.selectBomber(entities);
+
+    }
+
+    private Command createCommand(Bomber bomber, int dx, int dy, ActionType actionType) {
+        return new Command(actionType, new Point(dx + bomber.point.x, dy + bomber.point.y));
+    }
+
+    private Set<Command> forbiddenCommands(Turn turn, Map<Integer, Command> commandBase) {
+
+        return null;
+    }
+
     Output solve(Turn turn) {
         long clock_begin = System.currentTimeMillis();
         Map<Integer, Bomber> bombers = this.selectBomber(turn.entities);
@@ -372,15 +394,21 @@ class Pilot {
         Set<Command> forbidden;
         {
             List<List<ExplodedTimeInfo>> explodedTime = explodedTime(turn);
-            List<Map<Integer, Command>> commandBase = new ArrayList<>();
+            Map<Integer, Command> commandBase = new HashMap<>();
             Map<Point, Bomb> bombs = selectBomb(turn);
 
-            for (Bomber b : bombers.values()) {
-                // @HERE
-                if (b.id == this.config.myId) {
-
+            for (Bomber bomber : bombers.values()) {
+                if (bomber.id != this.config.myId) {
+                    if (bomber.bomb == 0) {
+                        continue;
+                    }
+                    if (bombs.containsKey(bomber.point)) {
+                        continue;
+                    }
+                    commandBase.put(bomber.id, createCommand(bomber, 0, 0, ActionType.BOMB));
                 }
             }
+            forbidden = forbiddenCommands(turn, commandBase);
         }
         return null;
     }
