@@ -806,6 +806,7 @@ uint64_t signature_photon(photon_t const &pho)
     {
         f(min(bomb_time + 1, pho.exptime[y][x].time));
     }
+
     for (entity_t const &ent : pho.turn.entities)
     {
         f(int(ent.type));
