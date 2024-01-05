@@ -146,6 +146,29 @@ class Turn {
         board = new ArrayList<>();
         entities = new ArrayList<>();
     }
+
+    public Turn(Turn turn) {
+        board = new ArrayList<>(turn.board);
+        entities = new ArrayList<>(turn.entities);
+    }
+
+    public Turn(List<List<CellType>> board, List<Entity> entities) {
+        this.board = board;
+        this.entities = entities;
+    }
+
+    @Override
+    public String toString() {
+        return "Turn [board=" + board + ", entities=" + entities + "]";
+    }
+
+}
+
+class NextTurnInfo {
+    boolean[] killed = new boolean[Game.BOMBER_NUMBER];
+    int[] box = new int[Game.BOMBER_NUMBER];
+    int[] range = new int[Game.BOMBER_NUMBER];
+    int[] bomb = new int[Game.BOMBER_NUMBER];
 }
 
 enum ActionType {
@@ -190,12 +213,15 @@ class ExplodedTimeInfo {
     }
 }
 
-class Pilot {
-    private static final int TIME_LIMIT = 100; // ms
-    private static final int BOMBER_NUMBER = 4;
-    private static final int BOMB_TIME = 8;
-    private static final int[] dy = { -1, 1, 0, 0, 0 };
-    private static final int[] dx = { 0, 0, 1, -1, 0 };
+class Game {
+    public static final int TIME_LIMIT = 100; // ms
+    public static final int BOMBER_NUMBER = 4;
+    public static final int BOMB_TIME = 8;
+    public static final int[] dy = { -1, 1, 0, 0, 0 };
+    public static final int[] dx = { 0, 0, 1, -1, 0 };
+}
+
+class Pilot extends Game {
 
     private GameConfig config;
     private List<Turn> turns;
@@ -340,7 +366,6 @@ class Pilot {
         List<List<ExplodedTimeInfo>> result = initExplodedTimeInfo();
 
         // define `explode` function above
-
         for (int i = 0; i < BOMB_TIME; ++i) {
             Set<Point> used = new HashSet<>();
             for (Point point : explodedAt.get(i)) {
@@ -371,16 +396,303 @@ class Pilot {
         return bombs;
     }
 
-    private int findBomber(List<Entity> entities, int id) {
-        List<Bomber> bombers = this.selectBomber(entities);
+    private Bomber findBomber(List<Entity> entities, int id) {
+        Map<Integer, Bomber> bombers = this.selectBomber(entities);
 
+        return bombers.get(id);
     }
 
     private Command createCommand(Bomber bomber, int dx, int dy, ActionType actionType) {
         return new Command(actionType, new Point(dx + bomber.point.x, dy + bomber.point.y));
     }
 
+    private boolean isValidCommands(Turn turn, Map<Integer, Command> commands) {
+        List<Bomber> bombers = new ArrayList<>();
+        Set<Point> bombs = new HashSet<>();
+
+        for (Entity entity : turn.entities) {
+            switch (entity.entityType) {
+                case BOMBER:
+                    bombers.add((Bomber) entity);
+                    break;
+                case BOMB:
+                    bombs.add(entity.point);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        for (Bomber bomber : bombers) {
+            if (commands.containsKey(bomber.id)) {
+                Command command = commands.get(bomber.id);
+                if (command.point.equals(bomber.point)) {
+                    if (!isOnField(command.point.x, command.point.y, this.config.height, this.config.width)) {
+                        return false;
+                    }
+                    if (Math.abs(command.point.y - bomber.point.y) + Math.abs(command.point.x - bomber.point.x) >= 2) {
+                        return false;
+                    }
+                    if (turn.board.get(command.point.y).get(command.point.x) != CellType.EMPTY) {
+                        return false;
+                    }
+                    if (bombs.contains(command.point)) {
+                        return false;
+                    }
+                }
+
+                if (command.action == ActionType.BOMB) {
+                    if (bomber.bomb == 0) {
+                        return false;
+                    }
+                    if (bombs.contains(bomber.point)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private ItemType openItemBox(CellType cellType) {
+        switch (cellType) {
+            case BOX_EXTRA_BOMB:
+                return ItemType.EXTRA_BOMB;
+            case BOX_EXTRA_RANGE:
+                return ItemType.EXTRA_RANGE;
+            default:
+                return ItemType.EXTRA_BOMB;
+        }
+    }
+
+    private Bomb placeBomb(Bomber bomber) {
+        return new Bomb(EntityType.BOMB, bomber.point.x, bomber.point.y, bomber.id, BOMB_TIME, bomber.range);
+    }
+
+    private Turn nextTurn(Turn turn,
+            List<List<ExplodedTimeInfo>> expTime,
+            Map<Integer, Command> commands,
+            NextTurnInfo info) {
+        if (!isValidCommands(turn, commands)) {
+            return null;
+        }
+        Turn next = new Turn();
+        next.board = Helper.clone(turn.board);
+        // bomb
+        // > At the start of the round, all bombs have their countdown decreased by 1.
+        // > Any bomb countdown that reaches 0 will cause the bomb to explode
+        // immediately, before players move.
+        Map<Point, Item> items = new HashMap<>();
+
+        for (int y = 0; y < this.config.height; ++y) {
+            for (int x = 0; x < this.config.width; ++x) {
+                if (expTime.get(y).get(x).time - 1 == 0) {
+                    // > Once the explosions have been computed, any box hit is then removed. This
+                    // means that the destruction of 1 box can count for 2 different players.
+                    if (this.isBox(turn.board.get(x).get(x))) {
+                        next.board.get(y).set(x, CellType.EMPTY);
+                        // drop item
+                        if (turn.board.get(y).get(x) != CellType.BOX) {
+                            ItemType itemType = openItemBox(turn.board.get(y).get(x));
+                            items.put(new Point(x, y), new Item(EntityType.ITEM, x, y, itemType));
+                        }
+                        for (int i = 0; i < Game.BOMBER_NUMBER; ++i) {
+                            if (expTime.get(y).get(x).owner[i]) {
+                                info.box[i] += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // split entities
+        Map<Integer, Bomber> bombers = new HashMap<>(); // after explosion
+        Map<Point, Bomb> bombs = new HashMap<>(); // after explosion, before placing
+        int[] exploded_bombs = new int[Game.BOMBER_NUMBER];
+
+        for (Entity e : turn.entities) {
+            if (expTime.get(e.point.y).get(e.point.x).time - 1 == 0) {
+                switch (e.entityType) {
+                    case BOMBER:
+                        info.killed[((Bomber) e).id] = true;
+                        if (((Bomber) e).id == this.config.myId) {
+                            return null;
+                        }
+                        break;
+                    case BOMB:
+                        exploded_bombs[((Bomb) e).ownerId] += 1;
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                switch (e.entityType) {
+                    case BOMBER:
+                        bombers.put(((Bomber) e).id, (Bomber) e);
+                        break;
+                    case BOMB: // @NOTE
+                        Bomb bomb = (Bomb) e;
+                        bomb.time -= 1;
+                        bombs.put(bomb.point, bomb);
+                        next.entities.add(e);
+                        break;
+                    case ITEM:
+                        items.put(e.point, (Item) e);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        // player
+        // > Players then perform their actions simultaneously.
+        // > Any bombs placed by a player appear at the end of the round.
+        Set<Point> playerExists = new HashSet<>(); // moved
+        for (Bomber bomber : bombers.values()) {
+            if (commands.containsKey(bomber.id)) {
+                Command command = commands.get(bomber.id);
+                // place bomb
+                if (command.action == ActionType.BOMB) {
+                    bomber.bomb -= 1;
+                    next.entities.add(this.placeBomb(bomber)); // don't add to map<point_t,player_t> bombs
+                }
+                // move
+                if (!command.point.equals(bomber.point)) {
+                    bomber.point.x = command.point.x;
+                    bomber.point.y = command.point.y;
+                    // get item
+                    if (items.containsKey(bomber.point)) {
+                        Item item = items.get(bomber.point);
+                        switch (item.itemType) {
+                            case EXTRA_BOMB:
+                                bomber.bomb += 1;
+                                info.range[bomber.id] += 1;
+                                break;
+                            case EXTRA_RANGE:
+                                bomber.range += 1;
+                                info.range[bomber.id] += 1;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+            bomber.bomb += exploded_bombs[bomber.id];
+            playerExists.add(bomber.point);
+            next.entities.add(bomber);
+        }
+        // item
+        for (Item item : items.values()) {
+            if (playerExists.contains(item.point)) {
+                continue;
+            }
+            next.entities.add(item);
+        }
+        return next;
+    }
+
+    private boolean isSurvivable(int id, Turn turn, List<List<ExplodedTimeInfo>> expTime) {
+        Bomber bomber = this.findBomber(turn.entities, id);
+        if (bomber == null) {
+            return false;
+        }
+
+        if (expTime.get(bomber.point.y).get(bomber.point.x).time - 1 == 0) {
+            return false;
+        }
+
+        int height = this.config.height;
+        int width = this.config.width;
+
+        Set<Point> bombs = new HashSet<>();
+        for (Entity ent : turn.entities) {
+            if (ent.entityType == EntityType.BOMB) {
+                bombs.add(ent.point);
+            }
+        }
+
+        List<List<Boolean>> cur = Helper.matrixBoolean(height, width);
+        cur.get(bomber.point.y).set(bomber.point.x, true);
+
+        for (int t = 0; t < Game.BOMB_TIME; ++t) {
+            boolean exists = false;
+            List<List<Boolean>> prv = Helper.clone(cur);
+            cur = Helper.matrixBoolean(height, width);
+
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    if (!prv.get(y).get(x)) {
+                        continue;
+                    }
+                    if (expTime.get(y).get(x).time - 1 == t) {
+                        continue;
+                    }
+                    for (int i = 0; i < 5; ++i) {
+                        int ny = y + dy[i];
+                        int nx = x + dx[i];
+                        if (!isOnField(nx, ny, height, width)) {
+                            continue;
+                        }
+                        if (turn.board.get(ny).get(nx) == CellType.WALL) {
+                            continue;
+                        }
+                        if (isBox(turn.board.get(ny).get(nx)) && expTime.get(y).get(x).time - 1 >= t) {
+                            continue;
+                        }
+                        if (ny != y && nx != x && bombs.contains(new Point(nx, ny))
+                                && expTime.get(y).get(x).time - 1 >= t) {
+                            continue;
+                        }
+                        cur.get(ny).set(nx, true);
+                        exists = true;
+                    }
+                }
+            }
+            if (!exists) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isSurvivableWithCommands(
+            int bomberId,
+            Map<Integer, Command> commands,
+            Turn aTurn,
+            List<List<ExplodedTimeInfo>> aExpTime) {
+        // Something
+        Turn turn = new Turn(aTurn);
+        List<List<ExplodedTimeInfo>> expTime = Helper.clone(aExpTime);
+        Bomber bomber = findBomber(turn.entities, bomberId);
+        if (bomber == null) {
+            return false;
+        }
+        NextTurnInfo nextTurnInfo = new NextTurnInfo();
+        Turn nextTurn = nextTurn(turn, expTime, commands, nextTurnInfo);
+        if (nextTurn == null) {
+            return false;
+        }
+        expTime = explodedTime(nextTurn);
+        if (findBomber(turn.entities, this.config.myId) == null) {
+            return false;
+        }
+        return isSurvivable(this.config.myId, turn, expTime);
+    }
+
     private Set<Command> forbiddenCommands(Turn turn, Map<Integer, Command> commandBase) {
+        List<List<ExplodedTimeInfo>> expTime = explodedTime(turn);
+        Bomber self = this.findBomber(turn.entities, this.config.myId);
+
+        final ActionType[] actionTypes = { ActionType.BOMB, ActionType.MOVE };
+
+        for (int i = 0; i < 5; ++i) {
+            for (int j = 0; j < 2; ++j) {
+                Map<Integer, Command> commands = new HashMap<>(commandBase);
+                commands.put(self.id, createCommand(self, dx[i], dy[i], actionTypes[j]));
+                // if()
+            }
+        }
 
         return null;
     }
@@ -495,6 +807,7 @@ class Player {
         }
 
         System.out.println("MOVE 1 2");
+        System.err.println(turn);
         return turn;
     }
 
@@ -517,5 +830,17 @@ class Player {
 class Helper {
     public static <T> List<List<T>> clone(List<List<T>> src) {
         return new ArrayList<>(src.stream().map(e -> new ArrayList<>(e)).collect(Collectors.toList()));
+    }
+
+    public static List<List<Boolean>> matrixBoolean(int a, int b) {
+        List<List<Boolean>> matrix = new ArrayList<>(a);
+        for (int i = 0; i < a; ++i) {
+            List<Boolean> row = new ArrayList<>();
+            for (int j = 0; j < b; ++j) {
+                row.add(false);
+            }
+            matrix.add(row);
+        }
+        return matrix;
     }
 }
