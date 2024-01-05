@@ -841,6 +841,7 @@ shared_ptr<photon_t> update_photon(photon_t const &pho, map<player_id_t, command
     if (not next_turn_ptr)
         return nullptr;
     npho->turn = *next_turn_ptr;
+    // @NOTE
     assert(commands.count(self_id));
     if (pho.age == 0)
         npho->initial_command = commands.at(self_id);
@@ -966,20 +967,26 @@ public:
                 if (not clock_check())
                     break;
                 beam.clear();
+
                 repeat(y, height) repeat(x, width)
                 {
                     whole(sort, nbeam[y][x], [&](shared_ptr<photon_t> const &a, shared_ptr<photon_t> const &b)
                           { return a->score > b->score; }); // reversed
+
                     if (nbeam[y][x].size() > point_beam_width)
                         nbeam[y][x].resize(point_beam_width);
+
                     whole(copy, nbeam[y][x], back_inserter(beam));
                 }
                 whole(sort, beam, [&](shared_ptr<photon_t> const &a, shared_ptr<photon_t> const &b)
                       { return a->score > b->score; }); // reversed
+
                 if (beam.size() > beam_width)
                     beam.resize(beam_width);
+
                 if (not beam.empty())
                     command = beam[0]->initial_command;
+
                 if (message.empty() and beam.empty())
                 {
                     if (age == 0)

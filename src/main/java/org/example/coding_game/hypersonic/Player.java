@@ -213,11 +213,49 @@ class Command { // MOVE x y || BOMB x y
     public String toString() {
         return action + " " + point.x + " " + point.y + " ";
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((action == null) ? 0 : action.hashCode());
+        result = prime * result + ((point == null) ? 0 : point.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Command other = (Command) obj;
+        if (action != other.action)
+            return false;
+        if (point == null) {
+            if (other.point != null)
+                return false;
+        } else if (!point.equals(other.point))
+            return false;
+        return true;
+    }
+
 }
 
 class Output {
     Command command;
     String message;
+
+    public Output() {
+
+    }
+
+    public Output(Command command, String message) {
+        this.command = command;
+        this.message = message;
+    }
 
     @Override
     public String toString() {
@@ -245,7 +283,7 @@ class Game {
     // time_limit - time_limit_margin; // magic, randomness
 }
 
-class Photon {
+class Photon implements Comparable {
     Turn turn;
     Command initCommand;
     int age;
@@ -257,6 +295,20 @@ class Photon {
     BigInteger signature;
 
     public Photon() {
+    }
+
+    public Photon(Photon photon) {
+        this.turn = photon.turn;
+        this.initCommand = photon.initCommand;
+        this.age = photon.age;
+        this.box = photon.box;
+        this.range = photon.range;
+        this.bomb = photon.bomb;
+        this.expTime = photon.expTime;
+        this.boxAcc = photon.boxAcc;
+        this.bonus = photon.bonus;
+        this.score = photon.score;
+        this.signature = photon.signature;
     }
 
     public Photon(Turn turn, Command initCommand, int age, int box, int range, int bomb,
@@ -273,14 +325,23 @@ class Photon {
         this.score = score;
         this.signature = signature;
     }
+
+    @Override
+    public int compareTo(Object o) {
+        Photon other = (Photon) o;
+        return (int) (this.score - other.score);
+    }
 }
 
 class Pilot extends Game {
 
     private GameConfig config;
     private List<Turn> turns;
+    private List<Output> outputs;
 
     public Pilot(GameConfig config) {
+        this.turns = new ArrayList<>();
+        this.outputs = new ArrayList<>();
         this.config = config;
     }
 
@@ -879,27 +940,139 @@ class Pilot extends Game {
             if (forbidden.size() == 10) {
                 forbidden.clear();
             }
+        }
 
-            // Beam Search
-            String message = "";
-            Command command = new Command(ActionType.MOVE, self.point);
-            {
-                List<Photon> beam = new ArrayList<>();
-                beam.add(initPhoton(turn));
-                int beam_width = 100;
-                int point_beam_width = 6;
-                int simulation_time = 8;
-                int time_limit_margin = 5;
-                long clock_end = System.currentTimeMillis();
-                long clock_count = clock_end - clock_begin;
+        // Beam Search
+        String message = "";
+        Command command = new Command(ActionType.MOVE, self.point);
+        {
+            List<Photon> beam = new ArrayList<>();
+            beam.add(initPhoton(turn));
+            int beam_width = 100;
+            int point_beam_width = 6;
+            int simulation_time = 8;
+            int time_limit_margin = 5;
+            long clock_end = System.currentTimeMillis();
+            long clock_count = clock_end - clock_begin;
 
-                for (int age = 0; age < simulation_time; ++age) {
-                    Set<BigInteger> used;
+            for (int age = 0; age < simulation_time; ++age) {
+                Set<BigInteger> used = new HashSet<>();
+                List<List<List<Photon>>> nbeam = setupNBeam(this.config.height, this.config.width);
+                for (Photon photon : beam) {
+                    for (int i = 0; i < 5; ++i) {
+                        for (int j = 0; j < 2; ++j) {
+                            Map<Integer, Command> commands = new HashMap<>();
+                            {
+                                Bomber curself = this.findBomber(photon.turn.entities, this.config.myId);
+                                ActionType actionType = j == 0 ? ActionType.MOVE : ActionType.BOMB;
+                                Command comd = new Command(actionType, new Point(dx[i], dy[i]));
+                                if (age == 0 && forbidden.contains(comd)) {
+                                    continue;
+                                }
+                                commands.put(curself.id, comd);
+                            }
+                            Photon npho = updatePhoton(photon, commands);
+                            if (npho == null) {
+                                continue;
+                            }
+                            used.add(npho.signature);
+                            if (!this.isSurvivable(this.config.myId, npho.turn, npho.expTime)) {
+                                continue;
+                            }
+                            Point p = this.findBomber(npho.turn.entities, this.config.myId).point;
+                            nbeam.get(p.y).get(p.x).add(npho);
+                        }
+                    }
+                    if (clock_count >= Game.TIME_LIMIT - Game.TIME_LIMIT_MARGIN) {
+                        System.err.println("@ERROR TIMEOUT");
+                        break;
+                    }
+                }
+                if (clock_count >= Game.TIME_LIMIT - Game.TIME_LIMIT_MARGIN) {
+                    System.err.println("@ERROR TIMEOUT");
+                    break;
+                }
+                beam.clear();
 
+                //
+                for (int y = 0; y < this.config.height; ++y) {
+                    for (int x = 0; x < this.config.width; ++x) {
+                        Collections.sort(nbeam.get(y).get(x));
+                        Helper.resize(nbeam.get(y).get(x), point_beam_width);
+                        for (Photon photon : beam) {
+                            nbeam.get(y).get(x).add(photon);
+                        }
+                    }
+                }
+                Collections.sort(beam);
+                Helper.resize(beam, beam_width);
+
+                if (!beam.isEmpty()) {
+                    command = beam.get(0).initCommand;
+                }
+
+                if (message.isEmpty() && beam.isEmpty()) {
+                    if (age == 0) {
+                        message = "Pitbull So Cute!";
+                    } else {
+                        message = "Bully So Cute";
+                    }
                 }
             }
         }
-        return null;
+
+        // log
+        long clock_end_2 = System.currentTimeMillis();
+        {
+            long clock_count_2 = clock_end_2 - clock_begin;
+            if (message.isEmpty()) {
+                message = clock_count_2 + "ms";
+            } else {
+                message = message + " (" + clock_count_2 + "ms)";
+            }
+        }
+        turns.add(turn);
+        Output output = new Output(command, message);
+        outputs.add(output);
+        return output;
+    }
+
+    private Photon updatePhoton(Photon photon, Map<Integer, Command> commands) {
+        Photon nPhoton = new Photon(photon);
+        NextTurnInfo info = new NextTurnInfo();
+        Turn nextTurn = this.nextTurn(photon.turn, photon.expTime, commands, info);
+        if (nextTurn == null) {
+            return null;
+        }
+        nPhoton.turn = new Turn(nextTurn);
+        if (photon.age == 0) {
+            nPhoton.initCommand = commands.get(this.config.myId);
+        }
+
+        Collections.sort(nPhoton.turn.entities);
+        nPhoton.age += 1;
+        nPhoton.box += info.box[this.config.myId];
+        nPhoton.range += info.range[this.config.myId];
+        nPhoton.bomb += info.bomb[this.config.myId];
+        nPhoton.expTime = this.explodedTime(nPhoton.turn);
+        nPhoton.boxAcc += photon.box;
+        nPhoton.score = evaluatePhoton(nPhoton);
+        nPhoton.signature = signaturePhoton(nPhoton);
+
+        return nPhoton;
+    }
+
+    private List<List<List<Photon>>> setupNBeam(int height, int width) {
+        List<List<List<Photon>>> nbeam = new ArrayList<>();
+        for (int i = 0; i < height; ++i) {
+            List<List<Photon>> d1 = new ArrayList<>();
+            for (int j = 0; j < width; ++j) {
+                List<Photon> d2 = new ArrayList<>();
+                d1.add(d2);
+            }
+            nbeam.add(d1);
+        }
+        return nbeam;
     }
 }
 
@@ -983,8 +1156,6 @@ class Player {
             turn.entities.add(entity);
         }
 
-        System.out.println("MOVE 1 2");
-        System.err.println(turn);
         return turn;
     }
 
@@ -999,7 +1170,7 @@ class Player {
         while (true) {
             Turn turn = scanTurn();
             Output output = ai.solve(turn);
-            // System.out.println(output);
+            System.out.println(output);
         }
     }
 }
@@ -1019,5 +1190,12 @@ class Helper {
             matrix.add(row);
         }
         return matrix;
+    }
+
+    public static <T> List<T> resize(List<T> list, int size) {
+        while (list.size() > size) {
+            list.remove(list.size() - 1);
+        }
+        return list;
     }
 }
