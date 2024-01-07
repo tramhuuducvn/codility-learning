@@ -650,6 +650,10 @@ bool is_survivable(player_id_t self_id, turn_t const &turn, vector<vector<explod
     shared_ptr<player_t> self = find_player(turn.entities, self_id);
     if (not self)
         return false;
+    if (self->x < 0 || self->y < 0)
+    {
+        cerr << "@ERROR: " + self->x << " " << self->y << endl;
+    }
     if (exptime[self->y][self->x].time - 1 == 0)
         return false;
     int h = turn.config.height;
@@ -921,6 +925,7 @@ public:
         {
             vector<shared_ptr<photon_t>> beam;
             beam.emplace_back(make_shared<photon_t>(initial_photon(turn)));
+            cerr << "beam size: " << beam.size() << endl;
             const int beam_width = 100;
             const int point_beam_width = 6;
             const int simulation_time = 8;
@@ -966,7 +971,10 @@ public:
                 }
                 if (not clock_check())
                     break;
+
                 beam.clear();
+
+                // cerr << beam.size() << endl;
 
                 repeat(y, height) repeat(x, width)
                 {

@@ -1,5 +1,7 @@
 package org.example.coding_game.hypersonic;
 
+// package org.example.coding_game.hypersonic;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.io.*;
@@ -124,6 +126,12 @@ class Bomber extends Entity {
         this.param1 = bomb;
         this.param2 = range;
     }
+
+    @Override
+    public String toString() {
+        return "Bomber [id=" + id + ", bomb=" + bomb + ", range=" + range + " point = " + this.point + "]";
+    }
+
 }
 
 class Bomb extends Entity {
@@ -346,15 +354,18 @@ class Pilot extends Game {
     }
 
     private Map<Integer, Bomber> selectBomber(List<Entity> entities) {
-        Map<Integer, Bomber> players = new HashMap<>();
+        Map<Integer, Bomber> bombers = new HashMap<>();
 
         for (Entity entity : entities) {
             if (entity.entityType == EntityType.BOMBER) {
-                Bomber player = (Bomber) entity;
-                players.put(player.id, player);
+                Bomber bomber = (Bomber) entity;
+                bombers.put(bomber.id, bomber);
             }
         }
-        return players;
+        for (Entity e : entities) {
+            System.err.println("E PIT " + e);
+        }
+        return bombers;
     }
 
     private Map<Point, List<Entity>> entityMultimap(List<Entity> entities) {
@@ -513,6 +524,10 @@ class Pilot extends Game {
 
     private Bomber findBomber(List<Entity> entities, int id) {
         Map<Integer, Bomber> bombers = this.selectBomber(entities);
+        for (Entity e : entities) {
+            System.err.println("E PIT " + e);
+        }
+        System.err.println(">>> POINT???? " + bombers.get(id).point);
 
         return bombers.get(id);
     }
@@ -543,30 +558,36 @@ class Pilot extends Game {
                 Command command = commands.get(bomber.id);
                 if (command.point.equals(bomber.point)) {
                     if (!isOnField(command.point.x, command.point.y, this.config.height, this.config.width)) {
+                        System.err.println("Command is not isOnField");
                         return false;
                     }
                     if (Math.abs(command.point.y - bomber.point.y) + Math.abs(command.point.x - bomber.point.x) >= 2) {
+                        System.err.println("Command is >= 2");
                         return false;
                     }
                     if (turn.board.get(command.point.y).get(command.point.x) != CellType.EMPTY) {
+                        System.err.println("Command point != EMPTY");
                         return false;
                     }
                     if (bombs.contains(command.point)) {
+                        System.err.println("Bombs not contain command's point");
                         return false;
                     }
                 }
 
                 if (command.action == ActionType.BOMB) {
                     if (bomber.bomb == 0) {
+                        System.err.println("Number of bombs is zero");
                         return false;
                     }
                     if (bombs.contains(bomber.point)) {
+                        System.err.println("Number of bombs is zero");
                         return false;
                     }
                 }
             }
         }
-        return false;
+        return true;
     }
 
     private ItemType openItemBox(CellType cellType) {
@@ -589,6 +610,7 @@ class Pilot extends Game {
             Map<Integer, Command> commands,
             NextTurnInfo info) {
         if (!isValidCommands(turn, commands)) {
+            System.err.println("Command is INVALID");
             return null;
         }
         Turn next = new Turn();
@@ -712,9 +734,14 @@ class Pilot extends Game {
         if (bomber == null) {
             return false;
         }
+        System.err.println("BOMBER:  " + bomber);
 
-        if (expTime.get(bomber.point.y).get(bomber.point.x).time - 1 == 0) {
-            return false;
+        try {
+            if (expTime.get(bomber.point.y).get(bomber.point.x).time - 1 == 0) {
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("BOUND OF INDEX: " + bomber.point.y + " " + bomber.point.y);
         }
 
         int height = this.config.height;
@@ -777,6 +804,7 @@ class Pilot extends Game {
             Turn aTurn,
             List<List<ExplodedTimeInfo>> aExpTime) {
         // Something
+
         Turn turn = new Turn(aTurn);
         List<List<ExplodedTimeInfo>> expTime = Helper.clone(aExpTime);
         Bomber bomber = findBomber(turn.entities, bomberId);
@@ -792,6 +820,8 @@ class Pilot extends Game {
         if (findBomber(turn.entities, this.config.myId) == null) {
             return false;
         }
+        System.err.println("isSurvivableWithCommands: " + this.config.myId);
+
         return isSurvivable(this.config.myId, turn, expTime);
     }
 
@@ -956,8 +986,9 @@ class Pilot extends Game {
             long clock_count = clock_end - clock_begin;
 
             for (int age = 0; age < simulation_time; ++age) {
+                System.err.println("beam size: " + beam.size());
                 Set<BigInteger> used = new HashSet<>();
-                List<List<List<Photon>>> nbeam = setupNBeam(this.config.height, this.config.width);
+                List<List<List<Photon>>> nbeam = setupNBeam(this.config.height, this.config.width, beam);
                 for (Photon photon : beam) {
                     for (int i = 0; i < 5; ++i) {
                         for (int j = 0; j < 2; ++j) {
@@ -973,6 +1004,7 @@ class Pilot extends Game {
                             }
                             Photon npho = updatePhoton(photon, commands);
                             if (npho == null) {
+                                System.err.println("Photon is null: " + beam.size());
                                 continue;
                             }
                             used.add(npho.signature);
@@ -981,6 +1013,7 @@ class Pilot extends Game {
                             }
                             Point p = this.findBomber(npho.turn.entities, this.config.myId).point;
                             nbeam.get(p.y).get(p.x).add(npho);
+                            beam.add(npho);
                         }
                     }
                     if (clock_count >= Game.TIME_LIMIT - Game.TIME_LIMIT_MARGIN) {
@@ -1042,6 +1075,7 @@ class Pilot extends Game {
         NextTurnInfo info = new NextTurnInfo();
         Turn nextTurn = this.nextTurn(photon.turn, photon.expTime, commands, info);
         if (nextTurn == null) {
+            System.err.println("this.nextTurn is Null");
             return null;
         }
         nPhoton.turn = new Turn(nextTurn);
@@ -1062,13 +1096,12 @@ class Pilot extends Game {
         return nPhoton;
     }
 
-    private List<List<List<Photon>>> setupNBeam(int height, int width) {
+    private List<List<List<Photon>>> setupNBeam(int height, int width, List<Photon> beam) {
         List<List<List<Photon>>> nbeam = new ArrayList<>();
         for (int i = 0; i < height; ++i) {
             List<List<Photon>> d1 = new ArrayList<>();
             for (int j = 0; j < width; ++j) {
-                List<Photon> d2 = new ArrayList<>();
-                d1.add(d2);
+                d1.add(beam);
             }
             nbeam.add(d1);
         }
@@ -1153,6 +1186,7 @@ class Player {
 
         for (int i = 0; i < entities; i++) {
             Entity entity = scanEntity();
+            System.err.println(">>> POINT: " + entity.point);
             turn.entities.add(entity);
         }
 
@@ -1161,7 +1195,7 @@ class Player {
 
     private void play() {
         if (this.gameConfig == null) {
-            System.out.println("GAME CONFIG IS NULL");
+            System.err.println("GAME CONFIG IS NULL");
             return;
         }
 
@@ -1170,6 +1204,18 @@ class Player {
         while (true) {
             Turn turn = scanTurn();
             Output output = ai.solve(turn);
+            //
+            Random random = new Random();
+
+            int pill = random.nextInt(2);
+            if (pill == 1) {
+                int x = random.nextInt(random.nextInt(this.gameConfig.width));
+                int y = random.nextInt(random.nextInt(this.gameConfig.height));
+
+                System.out.println("MOVE " + x + " " + y);
+            } else {
+
+            }
             System.out.println(output);
         }
     }
