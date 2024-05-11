@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@DisplayName("SQRT3")
+@DisplayName("CubeRootTest")
 public class CubeRootTest {
 
     @ParameterizedTest
@@ -25,4 +25,5 @@ public class CubeRootTest {
                 Arguments.of(125, 5),
                 Arguments.of(216, 6));
     }
+
 }
