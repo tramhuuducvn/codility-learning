@@ -1,6 +1,6 @@
-package org.example.recursion.SQRT3;
+package org.example.recursion.CubeRoot;
 
-public class SQRT3 {
+public class CubeRoot {
     public static double solution(double x) {
         double ret;
 
