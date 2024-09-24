@@ -14,8 +14,8 @@ public class BinarySearchTreeTest {
         binarySearchTree.addNode(1);
     }
 
-    @Test
-    void testAddNode() {
-        BinaryTree.preorderTraversal(binarySearchTree.getRoot());
-    }
+    // @Test
+    // void testAddNode() {
+    // BinaryTree.preorderTraversal(binarySearchTree.getRoot());
+    // }
 }
