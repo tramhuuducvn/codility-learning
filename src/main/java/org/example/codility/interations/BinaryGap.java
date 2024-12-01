@@ -31,6 +31,12 @@ package org.example.codility.interations;
  */
 
 public class BinaryGap {
+    /**
+     * Convert number from decimal base to binary base.
+     * 
+     * @param N the number in decimal base
+     * @return a number in binary base
+     */
     public static String convertToBinary(int N) {
         StringBuilder str = new StringBuilder("");
         while (N > 0) {
@@ -41,6 +47,11 @@ public class BinaryGap {
         return str.reverse().toString();
     }
 
+    /**
+     * 
+     * @param N
+     * @return
+     */
     public static int solution(int N) {
         char[] binstr = convertToBinary(N).toCharArray();
         int size = binstr.length;

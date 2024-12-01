@@ -7,8 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import org.example.util.Logger;
-
+// https://leetcode.com/problems/valid-parentheses/submissions/1319857501/
 public class ValidParentheses {
 
     private static final Set<Character> openingBrackets = new HashSet<>(Arrays.asList('(', '[', '{'));
@@ -19,6 +18,11 @@ public class ValidParentheses {
         closingBrackets.put('}', '{');
     }
 
+    /**
+     * 
+     * @param s
+     * @return
+     */
     public static boolean isValid(String s) {
         // Define a stack to store our opening brackets
         Stack<Character> brackets = new Stack<>();
