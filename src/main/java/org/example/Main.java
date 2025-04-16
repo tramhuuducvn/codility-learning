@@ -9,6 +9,7 @@ public class Main {
         int[] src = { 1, 2, 3 };
         Logger.log(src.length);
         // Integer.MIN_VALUE;
+        // hello
 
     }
 }
