@@ -48,6 +48,7 @@ public class BinaryGap {
     }
 
     /**
+     * Solution.
      * 
      * @param N
      * @return

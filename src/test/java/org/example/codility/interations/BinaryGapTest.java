@@ -2,90 +2,47 @@ package org.example.codility.interations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class BinaryGapTest {
-    @Test
-    void testConvertToBinary_1() {
-        String result = BinaryGap.convertToBinary(9);
-        assertEquals("1001", result);
+
+    @ParameterizedTest
+    @MethodSource("provideValueForConvertToBinary")
+    public void testConvertBinary(int value, String expected) {
+        assertEquals(expected, BinaryGap.convertToBinary(value));
     }
 
-    @Test
-    void testConvertToBinary_2() {
-        String result = BinaryGap.convertToBinary(529);
-        assertEquals("1000010001", result);
+    @ParameterizedTest
+    @MethodSource("provideValueForSolution")
+    public void testSolution(int value, int expected) {
+        assertEquals(expected, BinaryGap.solution(value));
     }
 
-    @Test
-    void testConvertToBinary_3() {
-        String result = BinaryGap.convertToBinary(20);
-        assertEquals("10100", result);
+    private static Stream<Arguments> provideValueForConvertToBinary() {
+        return Stream.of(
+                Arguments.of(9, "1001"),
+                Arguments.of(529, "1000010001"),
+                Arguments.of(20, "10100"),
+                Arguments.of(15, "1111"),
+                Arguments.of(32, "100000"),
+                Arguments.of(1162, "10010001010"),
+                Arguments.of(328, "101001000")
+
+        );
     }
 
-    @Test
-    void testConvertToBinary_4() {
-        String result = BinaryGap.convertToBinary(15);
-        assertEquals("1111", result);
+    private static Stream<Arguments> provideValueForSolution() {
+        return Stream.of(Arguments.of(9, 2),
+                Arguments.of(529, 4),
+                Arguments.of(20, 1),
+                Arguments.of(15, 0),
+                Arguments.of(32, 0),
+                Arguments.of(1162, 3),
+                Arguments.of(328, 2));
     }
 
-    @Test
-    void testConvertToBinary_5() {
-        String result = BinaryGap.convertToBinary(32);
-        assertEquals("100000", result);
-    }
-
-    @Test
-    void testConvertToBinary_6() {
-        String result = BinaryGap.convertToBinary(1162);
-        assertEquals("10010001010", result);
-    }
-
-    @Test
-    void testConvertToBinary_7() {
-        String result = BinaryGap.convertToBinary(328);
-        assertEquals("101001000", result);
-    }
-
-    @Test
-    void testSolution_1() {
-        int k = BinaryGap.solution(9);
-        assertEquals(2, k);
-    }
-
-    @Test
-    void testSolution_2() {
-        int k = BinaryGap.solution(529);
-        assertEquals(4, k);
-    }
-
-    @Test
-    void testSolution_3() {
-        int k = BinaryGap.solution(20);
-        assertEquals(1, k);
-    }
-
-    @Test
-    void testSolution_4() {
-        int k = BinaryGap.solution(15);
-        assertEquals(0, k);
-    }
-
-    @Test
-    void testSolution_5() {
-        int k = BinaryGap.solution(32);
-        assertEquals(0, k);
-    }
-
-    @Test
-    void testSolution_6() {
-        int k = BinaryGap.solution(1162);
-        assertEquals(3, k);
-    }
-
-    @Test
-    void testSolution_7() {
-        int k = BinaryGap.solution(328);
-        assertEquals(2, k);
-    }
 }

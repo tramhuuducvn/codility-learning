@@ -3,7 +3,10 @@ package org.example.design_pattern.creational.prototype;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.example.util.Logger;
+
 public class PrototypeDemo {
+
     public static void main(String[] args) {
         List<Shape> shapes = new ArrayList<>();
         List<Shape> shapesCopy = new ArrayList<>();
@@ -34,14 +37,14 @@ public class PrototypeDemo {
 
         for (int i = 0; i < shapes.size(); i++) {
             if (shapes.get(i) != shapesCopy.get(i)) {
-                System.out.println(i + ": Shapes are different objects (yay!)");
+                Logger.log(i + ": Shapes are different objects (yay!)");
                 if (shapes.get(i).equals(shapesCopy.get(i))) {
-                    System.out.println(i + ": And they are identical (yay!)");
+                    Logger.log(i + ": And they are identical (yay!)");
                 } else {
-                    System.out.println(i + ": But they are not identical (booo!)");
+                    Logger.log(i + ": But they are not identical (booo!)");
                 }
             } else {
-                System.out.println(i + ": Shape objects are the same (booo!)");
+                Logger.log(i + ": Shape objects are the same (booo!)");
             }
         }
     }
