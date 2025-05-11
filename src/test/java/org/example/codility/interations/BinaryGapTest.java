@@ -19,7 +19,13 @@ public class BinaryGapTest {
     @ParameterizedTest
     @MethodSource("provideValueForSolution")
     public void testSolution(int value, int expected) {
-        assertEquals(expected, BinaryGap.solution(value));
+        assertEquals(expected, BinaryGap.solution1(value));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideValueForSolution")
+    public void testSolution2(int value, int expected) {
+        assertEquals(expected, BinaryGap.solution2(value));
     }
 
     private static Stream<Arguments> provideValueForConvertToBinary() {

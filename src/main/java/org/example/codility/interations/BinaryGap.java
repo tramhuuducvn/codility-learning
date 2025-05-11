@@ -1,6 +1,9 @@
 //Reference: https://app.codility.com/programmers/lessons/1-iterations/binary_gap/
 package org.example.codility.interations;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A binary gap within a positive integer N is any maximal sequence of
  * consecutive zeros that is surrounded by ones at both ends in the binary
@@ -48,12 +51,12 @@ public class BinaryGap {
     }
 
     /**
-     * Solution.
+     * Solution 1.
      * 
      * @param N
      * @return
      */
-    public static int solution(int N) {
+    public static int solution1(int N) {
         char[] binstr = convertToBinary(N).toCharArray();
         int size = binstr.length;
         int index = 0;
@@ -90,5 +93,33 @@ public class BinaryGap {
         }
 
         return max;
+    }
+
+    public static int solution2(int N) {
+        Integer.toBinaryString(N);
+        List<Integer> positions = new ArrayList<>();
+        int currentValue = N;
+        int r = 0;
+        int p = 0;
+        while (currentValue > 0) {
+            r = currentValue % 2;
+            currentValue = currentValue / 2;
+            if (r != 0) {
+                positions.add(p);
+            }
+            p++;
+        }
+
+        int maxInterval = 0;
+        int index = positions.size() - 1;
+        while (index > 0) {
+            int interval = positions.get(index) - positions.get(index - 1) - 1;
+            if (interval > maxInterval) {
+                maxInterval = interval;
+            }
+            index--;
+        }
+
+        return maxInterval;
     }
 }
